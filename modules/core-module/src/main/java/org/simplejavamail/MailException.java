@@ -4,7 +4,7 @@ package org.simplejavamail;
  * This exception is used to communicate errors during the creation, validation and sending of email.
  */
 @SuppressWarnings("serial")
-public abstract class MailException extends RuntimeException {
+public abstract class MailException extends Exception {
 
 	protected MailException(final String message) {
 		super(message);

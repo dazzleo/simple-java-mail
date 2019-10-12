@@ -115,7 +115,11 @@ public class SMIMESupport implements SMIMEModule {
 		return smimeBuilder;
 	}
 
-	public SmimeParseResultBuilder decryptAttachments(@Nonnull final List<AttachmentResource> attachments, @Nonnull final MimeMessage mimeMessage, @Nullable final Pkcs12Config pkcs12Config) {
+	/**
+	 * @see SMIMEModule#decryptAttachments(List, MimeMessage, Pkcs12Config)
+	 */
+	public SmimeParseResultBuilder decryptAttachments(@Nonnull final List<AttachmentResource> attachments, @Nonnull final MimeMessage mimeMessage, @Nullable final Pkcs12Config pkcs12Config)
+			throws SmimeException {
 		final SmimeParseResultBuilder smimeBuilder = new SmimeParseResultBuilder();
 
 		initSmimeMetadata(smimeBuilder, mimeMessage);
@@ -125,7 +129,11 @@ public class SMIMESupport implements SMIMEModule {
 		return smimeBuilder;
 	}
 
-	private void initSmimeMetadata(final SmimeParseResultBuilder smimeBuilder, @Nonnull final MimeMessage mimeMessage) {
+	/**
+	 * @throws SmimeException when an error occurs while getting the {@code Content-Type} header.
+	 */
+	private void initSmimeMetadata(final SmimeParseResultBuilder smimeBuilder, @Nonnull final MimeMessage mimeMessage)
+			throws SmimeException {
 		try {
 			if (mimeMessage.getHeader("Content-Type", null) != null) {
 				ContentType ct = new ContentType(mimeMessage.getHeader("Content-Type", null));
@@ -208,7 +216,8 @@ public class SMIMESupport implements SMIMEModule {
 	public List<AttachmentResource> decryptAttachments(
 			@Nonnull final List<AttachmentResource> attachments,
 			@Nullable final Pkcs12Config pkcs12Config,
-			@Nonnull final OriginalSmimeDetails messageSmimeDetails) {
+			@Nonnull final OriginalSmimeDetails messageSmimeDetails)
+			throws SmimeException {
 		final List<AttachmentResource> decryptedAttachments;
 		decryptedAttachments = new ArrayList<>(attachments);
 

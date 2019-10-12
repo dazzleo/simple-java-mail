@@ -1,6 +1,8 @@
 package org.simplejavamail.internal.batchsupport;
 
-class BatchException extends RuntimeException {
+import org.simplejavamail.MailException;
+
+class BatchException extends MailException {
 
 	static final String ERROR_ACQUIRING_KEYED_POOLABLE = "Was unable to obtain a poolable object for key:\t\n%s";
 

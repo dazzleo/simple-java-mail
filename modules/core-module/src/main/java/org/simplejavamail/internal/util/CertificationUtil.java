@@ -23,14 +23,21 @@ public class CertificationUtil {
 
 	private static final String BOUNCY_CASTLE_PROVIDER_CLASS = "org.bouncycastle.jce.provider.BouncyCastleProvider";
 
+	/**
+	 * @throws SmimeSupportMissingException See {@link #readFromPem(InputStream)}.
+	 */
 	public static X509Certificate readFromPem(File pemFile)
-			throws CertificateException, NoSuchProviderException, FileNotFoundException {
+			throws CertificateException, NoSuchProviderException, FileNotFoundException, SmimeSupportMissingException {
 		return readFromPem(new FileInputStream(pemFile));
 	}
 
+	/**
+	 * @throws SmimeSupportMissingException when the BouncyCastle provider ({@value BOUNCY_CASTLE_PROVIDER_CLASS}) is missing on the class path, which means the
+	 * {@value org.simplejavamail.internal.modules.SMIMEModule#NAME} hasn't been included in the dependencies.
+	 */
 	@SuppressWarnings("unchecked")
 	public static X509Certificate readFromPem(InputStream pemData)
-			throws CertificateException, NoSuchProviderException {
+			throws CertificateException, NoSuchProviderException, SmimeSupportMissingException {
 		if (classAvailable(BOUNCY_CASTLE_PROVIDER_CLASS)) {
 			try {
 				Class<Provider> bouncyCastleClass = (Class<Provider>) forName(BOUNCY_CASTLE_PROVIDER_CLASS);

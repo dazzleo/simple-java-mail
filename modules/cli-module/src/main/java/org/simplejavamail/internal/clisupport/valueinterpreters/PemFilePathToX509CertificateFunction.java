@@ -1,6 +1,7 @@
 package org.simplejavamail.internal.clisupport.valueinterpreters;
 
 import org.bbottema.javareflection.valueconverter.IncompatibleTypeException;
+import org.simplejavamail.MailException;
 import org.simplejavamail.internal.util.CertificationUtil;
 
 import javax.annotation.Nonnull;
@@ -27,7 +28,7 @@ public class PemFilePathToX509CertificateFunction extends FileBasedFunction<X509
 	protected X509Certificate convertFile(File msgFile) {
 		try {
 			return CertificationUtil.readFromPem(msgFile);
-		} catch (CertificateException | NoSuchProviderException | FileNotFoundException e) {
+		} catch (CertificateException | NoSuchProviderException | FileNotFoundException | MailException e) {
 			throw new IncompatibleTypeException(msgFile, String.class, X509Certificate.class, e);
 		}
 	}

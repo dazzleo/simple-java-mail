@@ -1,5 +1,6 @@
 package org.simplejavamail.internal.modules;
 
+import org.simplejavamail.MailException;
 import org.simplejavamail.api.email.AttachmentResource;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.email.OriginalSmimeDetails;
@@ -30,14 +31,18 @@ public interface SMIMEModule {
 
 	/**
 	 * @return The results of the S/MIME decryption of any compatible encrypted / signed attachments.
+	 * @throws MailException when an error occurs while getting the {@code Content-Type} header from the give {@link MimeMessage}.
 	 */
-	SmimeParseResult decryptAttachments(@Nonnull List<AttachmentResource> attachments, @Nonnull MimeMessage mimeMessage, @Nullable Pkcs12Config pkcs12Config);
+	SmimeParseResult decryptAttachments(@Nonnull List<AttachmentResource> attachments, @Nonnull MimeMessage mimeMessage, @Nullable Pkcs12Config pkcs12Config)
+			throws MailException;
 
 	/**
 	 * @return A copy of given original 'true' attachments, with S/MIME encrypted / signed attachments replaced with the actual attachment.
+	 * @throws MailException when there was an error while decrypting a signed attachment.
 	 */
 	@Nonnull
-	List<AttachmentResource> decryptAttachments(@Nonnull List<AttachmentResource> attachments, @Nullable Pkcs12Config pkcs12Config, @Nonnull OriginalSmimeDetails messageSmimeDetails);
+	List<AttachmentResource> decryptAttachments(@Nonnull List<AttachmentResource> attachments, @Nullable Pkcs12Config pkcs12Config, @Nonnull OriginalSmimeDetails messageSmimeDetails)
+			throws MailException;
 
 	/**
 	 * @return Whether the given attachment is S/MIME signed / encrypted. Defers to {@code SmimeRecognitionUtil.isSmimeAttachment(..)}.

@@ -50,30 +50,33 @@ public class AttachmentResource implements Serializable {
 
 	/**
 	 * @return The content of the datasource as UTF-8 encoded String.
-	 * @throws IOException See {@link #readAllData(Charset)}
+	 * @throws IOException                 See {@link #readAllData(Charset)}.
+	 * @throws AttachmentResourceException See {@link #readAllData(Charset)}.
 	 */
 	@Nonnull
 	public String readAllData()
-			throws IOException {
+			throws IOException, AttachmentResourceException {
 		return readAllData(UTF_8);
 	}
 
 	/**
 	 * Delegates to {@link MiscUtil#readInputStreamToBytes(InputStream)} with data source input stream.
+	 * @throws AttachmentResourceException see {@link #getDataSourceInputStream()}.
 	 */
 	@Nonnull
 	public byte[] readAllBytes()
-			throws IOException {
+			throws IOException, AttachmentResourceException {
 		return MiscUtil.readInputStreamToBytes(getDataSourceInputStream());
 	}
 
 	/**
 	 * Delegates to {@link MiscUtil#readInputStreamToString(InputStream, Charset)} with data source input stream.
+	 * @throws AttachmentResourceException see {@link #getDataSourceInputStream()}.
 	 */
 	@SuppressWarnings({"WeakerAccess" })
 	@Nonnull
 	public String readAllData(@SuppressWarnings("SameParameterValue") @Nonnull final Charset charset)
-			throws IOException {
+			throws IOException, AttachmentResourceException {
 		checkNonEmptyArgument(charset, "charset");
 		return MiscUtil.readInputStreamToString(getDataSourceInputStream(), charset);
 	}
@@ -88,9 +91,11 @@ public class AttachmentResource implements Serializable {
 
 	/**
 	 * Delegates to {@link DataSource#getInputStream}
+	 * @throws AttachmentResourceException when an error occurs while getting input stream from attachment's data source.
 	 */
 	@Nonnull
-	public InputStream getDataSourceInputStream() {
+	public InputStream getDataSourceInputStream()
+			throws AttachmentResourceException {
 		try {
 			return dataSource.getInputStream();
 		} catch (IOException e) {
