@@ -26,8 +26,10 @@ public interface SMIMEModule {
 
 	/**
 	 * @return The results of the S/MIME decryption of any compatible encrypted / signed attachments.
+	 * @throws MailException when there was an error while decrypting a signed attachment.
 	 */
-	SmimeParseResult decryptAttachments(@Nonnull List<AttachmentResource> attachments, @Nonnull OutlookMessage outlookMessage, @Nullable Pkcs12Config pkcs12Config);
+	SmimeParseResult decryptAttachments(@Nonnull List<AttachmentResource> attachments, @Nonnull OutlookMessage outlookMessage, @Nullable Pkcs12Config pkcs12Config)
+			throws MailException;
 
 	/**
 	 * @return The results of the S/MIME decryption of any compatible encrypted / signed attachments.
@@ -53,17 +55,24 @@ public interface SMIMEModule {
 	 * @return The S/MIME mime type and signed who signed the attachment.
 	 * <br>
 	 * <strong>Note:</strong> the attachment is assumed to be a signed / encrypted {@link javax.mail.internet.MimeBodyPart}.
+	 *
+	 * @throws MailException See {@link #getSignedByAddress(AttachmentResource)}.
 	 */
 	@Nonnull
-	SmimeDetails getSmimeDetails(@Nonnull AttachmentResource attachment);
+	SmimeDetails getSmimeDetails(@Nonnull AttachmentResource attachment)
+			throws MailException;
 
 	/**
 	 * Delegates to {@link #getSignedByAddress(MimePart)}, where the datasource of the attachment is read completely as a MimeMessage.
 	 * <br>
 	 * <strong>Note:</strong> the attachment is assumed to be a signed / encrypted {@link javax.mail.internet.MimeBodyPart}.
+	 *
+	 * @throws MailException when reading all bytes of the given attachment (see {@link AttachmentResource#readAllBytes()}) or
+	 * when an error occurs while getting input stream from attachment's data source.
 	 */
 	@Nullable
-	String getSignedByAddress(@Nonnull AttachmentResource smimeAttachment);
+	String getSignedByAddress(@Nonnull AttachmentResource smimeAttachment)
+			throws MailException;
 
 	/**
 	 * @return Who S/MIME signed /encrypted the attachment. This is indicated by the subject of the certificate (whom the certificate was 'issued to').

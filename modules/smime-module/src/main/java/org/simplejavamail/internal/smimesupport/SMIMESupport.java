@@ -20,6 +20,7 @@ import org.bouncycastle.mail.smime.SMIMEException;
 import org.bouncycastle.mail.smime.SMIMESigned;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.util.Store;
+import org.simplejavamail.MailException;
 import org.simplejavamail.api.email.AttachmentResource;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.email.OriginalSmimeDetails;
@@ -85,8 +86,13 @@ public class SMIMESupport implements SMIMEModule {
 		Security.addProvider(new BouncyCastleProvider());
 	}
 
+	/**
+	 * @see SMIMEModule#decryptAttachments(List, OutlookMessage, Pkcs12Config)
+	 * @throws SmimeException when there was an error while decrypting a signed attachment.
+	 */
 	public SmimeParseResultBuilder decryptAttachments(@Nonnull final List<AttachmentResource> attachments, @Nonnull final OutlookMessage outlookMessage,
-			@Nullable final Pkcs12Config pkcs12Config) {
+			@Nullable final Pkcs12Config pkcs12Config)
+			throws SmimeException {
 		final SmimeParseResultBuilder smimeBuilder = new SmimeParseResultBuilder();
 
 		if (outlookMessage.getSmimeMime() instanceof OutlookSmimeApplicationSmime) {
@@ -117,6 +123,7 @@ public class SMIMESupport implements SMIMEModule {
 
 	/**
 	 * @see SMIMEModule#decryptAttachments(List, MimeMessage, Pkcs12Config)
+	 * @throws SmimeException when an error occurs while getting the {@code Content-Type} header from the give {@link MimeMessage}.
 	 */
 	public SmimeParseResultBuilder decryptAttachments(@Nonnull final List<AttachmentResource> attachments, @Nonnull final MimeMessage mimeMessage, @Nullable final Pkcs12Config pkcs12Config)
 			throws SmimeException {
@@ -177,8 +184,12 @@ public class SMIMESupport implements SMIMEModule {
 		return false;
 	}
 
+	/**
+	 * @throws SmimeException See {@link #decryptAttachments(List, Pkcs12Config, OriginalSmimeDetails)} and {@link #determineSmimeDetails(AttachmentResource)}.
+	 */
 	private void decryptAttachments(@Nonnull final SmimeParseResultBuilder smimeBuilder, @Nonnull final List<AttachmentResource> attachments,
-			@Nullable final Pkcs12Config pkcs12Config) {
+			@Nullable final Pkcs12Config pkcs12Config)
+			throws MailException {
 		LOGGER.debug("checking for S/MIME signed / encrypted attachments...");
 		List<AttachmentResource> decryptedAttachments = decryptAttachments(attachments, pkcs12Config, smimeBuilder.getOriginalSmimeDetails());
 		smimeBuilder.addDecryptedAttachments(decryptedAttachments);
@@ -197,8 +208,12 @@ public class SMIMESupport implements SMIMEModule {
 		return attachment.getDataSource().getContentType().equals("message/rfc822");
 	}
 
+	/**
+	 * @throws MailException See {@link #getSmimeDetails(AttachmentResource)}.
+	 */
 	@Nonnull
-	private OriginalSmimeDetailsImpl determineSmimeDetails(final AttachmentResource attachment) {
+	private OriginalSmimeDetailsImpl determineSmimeDetails(final AttachmentResource attachment)
+			throws MailException {
 		LOGGER.debug("Single S/MIME signed / encrypted attachment found; assuming the attachment is the message "
 				+ "body, a record of the original S/MIME details will be stored on the Email root...");
 		SmimeDetails smimeDetails = getSmimeDetails(attachment);
@@ -210,6 +225,7 @@ public class SMIMESupport implements SMIMEModule {
 
 	/**
 	 * @see SMIMEModule#decryptAttachments(List, Pkcs12Config, OriginalSmimeDetails)
+	 * @throws SmimeException when there was an error while decrypting a signed attachment.
 	 */
 	@Nonnull
 	@Override
@@ -243,10 +259,14 @@ public class SMIMESupport implements SMIMEModule {
 		return SMIME_MIMETYPES.contains(attachment.getDataSource().getContentType());
 	}
 
+	/**
+	 * @throws MailException when there was an error while unwrapping an S/MIME enveloped attachment or when reading all bytes from an attachment (see {@link AttachmentResource#readAllBytes()}).
+	 */
 	private AttachmentResource decryptAndUnsignAttachment(
 			@Nonnull final AttachmentResource attachment,
 			@Nullable final Pkcs12Config pkcs12Config,
-			@Nonnull final OriginalSmimeDetails messageSmimeDetails) {
+			@Nonnull final OriginalSmimeDetails messageSmimeDetails)
+			throws MailException {
 		try {
 			final InternetHeaders internetHeaders = new InternetHeaders();
 			internetHeaders.addHeader("Content-Type", restoreSmimeContentType(attachment, messageSmimeDetails));
@@ -319,10 +339,13 @@ public class SMIMESupport implements SMIMEModule {
 
 	/**
 	 * @see SMIMEModule#getSmimeDetails(AttachmentResource)
+	 *
+	 * @throws MailException See {@link #getSignedByAddress(AttachmentResource)}.
 	 */
 	@Nonnull
 	@Override
-	public SmimeDetails getSmimeDetails(@Nonnull final AttachmentResource attachment) {
+	public SmimeDetails getSmimeDetails(@Nonnull final AttachmentResource attachment)
+			throws MailException {
 		final String contentType = attachment.getDataSource().getContentType();
 		final String signedByAddress = getSignedByAddress(attachment);
 		return new SmimeDetailsImpl(contentType, signedByAddress);
@@ -330,10 +353,14 @@ public class SMIMESupport implements SMIMEModule {
 
 	/**
 	 * @see SMIMEModule#getSignedByAddress(AttachmentResource)
+	 *
+	 * @throws MailException when reading all bytes of the given attachment (see {@link AttachmentResource#readAllBytes()}) or
+	 * when an error occurs while getting input stream from attachment's data source.
 	 */
 	@Override
 	@Nullable
-	public String getSignedByAddress(@Nonnull AttachmentResource smimeAttachment) {
+	public String getSignedByAddress(@Nonnull AttachmentResource smimeAttachment)
+			throws MailException {
 		try {
 			final InternetHeaders internetHeaders = new InternetHeaders();
 			internetHeaders.addHeader("Content-Type", smimeAttachment.getDataSource().getContentType());
