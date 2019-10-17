@@ -82,11 +82,19 @@ public interface SMIMEModule {
 
 	boolean verifyValidSignature(@Nonnull MimeMessage mimeMessage, @Nonnull OriginalSmimeDetails messageSmimeDetails);
 
+	/**
+	 * @throws MailException See {@link #signMessage(Session, MimeMessage, Pkcs12Config)}
+	 */
 	@Nonnull
-	MimeMessage signAndOrEncryptEmail(@Nonnull final Session session, @Nonnull final MimeMessage messageToProtect, @Nonnull final Email emailContainingSmimeDetails);
+	MimeMessage signAndOrEncryptEmail(@Nonnull final Session session, @Nonnull final MimeMessage messageToProtect, @Nonnull final Email emailContainingSmimeDetails)
+			throws MailException;
 
+	/**
+	 * @throws MailException Thrown when there was an error reading the PKCS12 keystore from the input stream provided in the pkcs12Config parameter.
+	 */
 	@Nonnull
-	MimeMessage signMessage(@Nullable Session session, @Nonnull MimeMessage message, @Nonnull Pkcs12Config pkcs12Config);
+	MimeMessage signMessage(@Nullable Session session, @Nonnull MimeMessage message, @Nonnull Pkcs12Config pkcs12Config)
+			throws MailException;
 
 	@Nonnull
 	MimeMessage encryptMessage(@Nullable Session session, @Nonnull MimeMessage message, @Nonnull X509Certificate certificate);

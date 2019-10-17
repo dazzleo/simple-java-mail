@@ -1,5 +1,6 @@
 package org.simplejavamail.internal.batchsupport;
 
+import org.bbottema.clusteredobjectpool.core.api.ResourceKey;
 import org.bbottema.clusteredobjectpool.core.api.ResourceKey.ResourceClusterAndPoolKey;
 import org.bbottema.genericobjectpool.PoolableObject;
 import org.simplejavamail.api.internal.batchsupport.LifecycleDelegatingTransport;
@@ -85,11 +86,15 @@ public class BatchSupport implements BatchModule {
 	}
 
 	/**
+	 * @throws BatchException wrapping exceptions from
+	 * 		{@link SmtpConnectionPoolClustered#claimResourceFromPool(ResourceKey)} and
+	 * 		{@link SmtpConnectionPoolClustered#claimResourceFromCluster(UUID)}
 	 * @see BatchModule#acquireTransport(UUID, Session, boolean)
 	 */
 	@Nonnull
 	@Override
-	public LifecycleDelegatingTransport acquireTransport(@Nonnull final UUID clusterKey, @Nonnull final Session session, boolean stickySession) {
+	public LifecycleDelegatingTransport acquireTransport(@Nonnull final UUID clusterKey, @Nonnull final Session session, boolean stickySession)
+			throws BatchException {
 		try {
 			requireNonNull(smtpConnectionPool, "Connection pool used before it was initialized. This shouldn't be possible.");
 			final PoolableObject<Transport> pooledTransport = stickySession

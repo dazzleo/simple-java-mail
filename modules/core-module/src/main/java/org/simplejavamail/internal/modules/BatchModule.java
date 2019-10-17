@@ -1,11 +1,11 @@
 package org.simplejavamail.internal.modules;
 
+import org.simplejavamail.MailException;
 import org.simplejavamail.api.internal.batchsupport.LifecycleDelegatingTransport;
 import org.simplejavamail.api.mailer.AsyncResponse;
 import org.simplejavamail.api.mailer.config.OperationalConfig;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.mail.Session;
 import javax.mail.Transport;
 import java.util.UUID;
@@ -51,9 +51,11 @@ public interface BatchModule {
 	 * @param stickySession Indicates whether transport should be from this specific Session, or any session instance from the cluster. Useful when testing connections.
 	 *
 	 * @return A (new) {@link Transport} for the given session from the SMTP connection pool.
+	 * @throws MailException wrapping exceptions from {@code SmtpConnectionPoolClustered#claimResourceFromPool(ResourceKey)} and {@code SmtpConnectionPoolClustered#claimResourceFromCluster(UUID)}.
 	 */
 	@Nonnull
-	LifecycleDelegatingTransport acquireTransport(@Nonnull UUID clusterKey, @Nonnull Session session, boolean stickySession);
+	LifecycleDelegatingTransport acquireTransport(@Nonnull UUID clusterKey, @Nonnull Session session, boolean stickySession)
+			throws MailException;
 
 	/**
 	 * Shuts down connection pool(s) and closes remaining open connections. Waits until all connections still in use become available again to deallocate them as well.

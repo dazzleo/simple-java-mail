@@ -88,11 +88,11 @@ public class SMIMESupport implements SMIMEModule {
 
 	/**
 	 * @see SMIMEModule#decryptAttachments(List, OutlookMessage, Pkcs12Config)
-	 * @throws SmimeException when there was an error while decrypting a signed attachment.
+	 * @throws MailException See {@link #decryptAttachments(List, Pkcs12Config, OriginalSmimeDetails)} and {@link #getSmimeDetails(AttachmentResource)}.
 	 */
 	public SmimeParseResultBuilder decryptAttachments(@Nonnull final List<AttachmentResource> attachments, @Nonnull final OutlookMessage outlookMessage,
 			@Nullable final Pkcs12Config pkcs12Config)
-			throws SmimeException {
+			throws MailException {
 		final SmimeParseResultBuilder smimeBuilder = new SmimeParseResultBuilder();
 
 		if (outlookMessage.getSmimeMime() instanceof OutlookSmimeApplicationSmime) {
@@ -122,11 +122,16 @@ public class SMIMESupport implements SMIMEModule {
 	}
 
 	/**
+	 * @throws MailException Thrown when:
+	 *                       <ol>
+	 *                           <li>an error occurs while getting the {@code Content-Type} header</li>
+	 *                           <li>see {@link #decryptAttachments(List, Pkcs12Config, OriginalSmimeDetails)}</li>
+	 *                           <li>see {@link #getSmimeDetails(AttachmentResource)}</li>
+	 *                       </ol>
 	 * @see SMIMEModule#decryptAttachments(List, MimeMessage, Pkcs12Config)
-	 * @throws SmimeException when an error occurs while getting the {@code Content-Type} header from the give {@link MimeMessage}.
 	 */
 	public SmimeParseResultBuilder decryptAttachments(@Nonnull final List<AttachmentResource> attachments, @Nonnull final MimeMessage mimeMessage, @Nullable final Pkcs12Config pkcs12Config)
-			throws SmimeException {
+			throws MailException {
 		final SmimeParseResultBuilder smimeBuilder = new SmimeParseResultBuilder();
 
 		initSmimeMetadata(smimeBuilder, mimeMessage);
@@ -224,8 +229,14 @@ public class SMIMESupport implements SMIMEModule {
 	}
 
 	/**
+	 * @throws SmimeException Thrown when:
+	 *                        <ol>
+	 *                            <li>there was generally any error while decrypting a signed attachment</li>
+	 *                            <li>when there was an error while unwrapping an S/MIME enveloped attachment</li>
+	 *                            <li>when reading all bytes from an attachment (see {@link AttachmentResource#readAllBytes()})</li>
+	 *                            <li>when there was an error reading the PKCS12 keystore from the input stream provided in the pkcs12Config parameter.</li>
+	 *                        </ol>
 	 * @see SMIMEModule#decryptAttachments(List, Pkcs12Config, OriginalSmimeDetails)
-	 * @throws SmimeException when there was an error while decrypting a signed attachment.
 	 */
 	@Nonnull
 	@Override
@@ -260,7 +271,13 @@ public class SMIMESupport implements SMIMEModule {
 	}
 
 	/**
-	 * @throws MailException when there was an error while unwrapping an S/MIME enveloped attachment or when reading all bytes from an attachment (see {@link AttachmentResource#readAllBytes()}).
+	 * @throws MailException Thrown when:
+	 *                       <ol>
+	 *                           <li>there was generally any error while decrypting a signed attachment</li>
+	 *                           <li>when there was an error while unwrapping an S/MIME enveloped attachment</li>
+	 *                           <li>when reading all bytes from an attachment (see {@link AttachmentResource#readAllBytes()})</li>
+	 *                           <li>when there was an error reading the PKCS12 keystore from the input stream provided in the pkcs12Config parameter.</li>
+	 *                       </ol>
 	 */
 	private AttachmentResource decryptAndUnsignAttachment(
 			@Nonnull final AttachmentResource attachment,
@@ -375,7 +392,6 @@ public class SMIMESupport implements SMIMEModule {
 	 * @see SMIMEModule#getSignedByAddress(MimePart)
 	 */
 	@Nullable
-	@SuppressWarnings("deprecation")
 	public String getSignedByAddress(@Nonnull MimePart mimePart) {
 		try {
 			return getSignedByAddress(determineSMIMESigned(mimePart));
@@ -389,8 +405,13 @@ public class SMIMESupport implements SMIMEModule {
 		return determineStatus(mimeMessage, messageSmimeDetails) != SIGNED || SmimeUtil.checkSignature(mimeMessage);
 	}
 
+	/**
+	 * @throws SmimeException Thrown if mime part was neither {@code multipart/signed}, {@code application/pkcs7-mime} nor {@code application/x-pkcs7-mime} or if any reading error occurred while
+	 * determining this (mime message classes are full of runtime exceptions like this that will likely never trigger).
+	 */
 	@Nonnull
-	private static SMIMESigned determineSMIMESigned(MimePart mimePart) {
+	private static SMIMESigned determineSMIMESigned(MimePart mimePart)
+			throws SmimeException {
 		try {
 			if (mimePart.isMimeType("multipart/signed")) {
 				return new SMIMESigned((MimeMultipart) mimePart.getContent());
@@ -405,11 +426,14 @@ public class SMIMESupport implements SMIMEModule {
 	}
 
 	/**
-	 * @deprecated Should be removed once the pull-request has been merged and released
+	 * @throws SmimeException Thrown when generally any exception happens while parsing certificate data, and also specifically see {@link #getCertificate(Store, SignerId)} and {@link
+	 *                        #getVerifier(X509Certificate)}.
 	 * @see "https://github.com/markenwerk/java-utils-mail-smime/issues/5"
+	 * @deprecated Should be removed once the pull-request has been merged and released
 	 */
 	@SuppressWarnings("DeprecatedIsStillUsed")
-	private static String getSignedByAddress(SMIMESigned smimeSigned) {
+	private static String getSignedByAddress(SMIMESigned smimeSigned)
+			throws SmimeException {
 		try {
 			@SuppressWarnings("rawtypes")
 			Store certificates = smimeSigned.getCertificates();
@@ -451,9 +475,13 @@ public class SMIMESupport implements SMIMEModule {
 		return builder.build(certificate);
 	}
 
+	/**
+	 * @throws SmimeException See {@link #signMessage(Session, MimeMessage, Pkcs12Config)}
+	 */
 	@Nonnull
 	@Override
-	public MimeMessage signAndOrEncryptEmail(@Nullable final Session session, @Nonnull final MimeMessage messageToProtect, @Nonnull final Email emailContainingSmimeDetails) {
+	public MimeMessage signAndOrEncryptEmail(@Nullable final Session session, @Nonnull final MimeMessage messageToProtect, @Nonnull final Email emailContainingSmimeDetails)
+			throws SmimeException {
 		MimeMessage result = messageToProtect;
 		if (emailContainingSmimeDetails.getPkcs12ConfigForSmimeSigning() != null) {
 			result = signMessage(session, result, emailContainingSmimeDetails.getPkcs12ConfigForSmimeSigning());
@@ -464,9 +492,13 @@ public class SMIMESupport implements SMIMEModule {
 		return result;
 	}
 
+	/**
+	 * @throws SmimeException Thrown when there was an error reading the PKCS12 keystore from the input stream provided in the pkcs12Config parameter.
+	 */
 	@Nonnull
 	@Override
-	public MimeMessage signMessage(@Nullable Session session, @Nonnull MimeMessage message, @Nonnull Pkcs12Config pkcs12Config) {
+	public MimeMessage signMessage(@Nullable Session session, @Nonnull MimeMessage message, @Nonnull Pkcs12Config pkcs12Config)
+			throws SmimeException {
 		SmimeKey smimeKey = retrieveSmimeKeyFromPkcs12Keystore(pkcs12Config);
 		return SmimeUtil.sign(session, message, smimeKey);
 	}
@@ -477,7 +509,11 @@ public class SMIMESupport implements SMIMEModule {
 		return SmimeUtil.encrypt(session, message, certificate);
 	}
 
-	private SmimeKey retrieveSmimeKeyFromPkcs12Keystore(@Nonnull Pkcs12Config pkcs12Config) {
+	/**
+	 * @throws SmimeException Thrown when there was an error reading the PKCS12 keystore from the input stream provided in the pkcs12Config parameter.
+	 */
+	private SmimeKey retrieveSmimeKeyFromPkcs12Keystore(@Nonnull Pkcs12Config pkcs12Config)
+			throws SmimeException {
 		try {
 			try (InputStream pkcs12StoreStream = pkcs12Config.getPkcs12StoreStream()) {
 				return new SmimeKeyStore(pkcs12StoreStream, pkcs12Config.getStorePassword())

@@ -24,22 +24,34 @@ import static org.simplejavamail.internal.util.SimpleOptional.ofNullable;
 @SuppressWarnings("unused")
 public class OutlookEmailConverter implements OutlookModule {
 
+	/**
+	 * @throws OutlookMessageException wrapping exceptions from {@link org.simplejavamail.outlookmessageparser.OutlookMessageParser#parseMsg(File)}.
+	 */
 	@Override
-	public EmailFromOutlookMessage outlookMsgToEmailBuilder(@Nonnull File msgFile, @Nonnull EmailStartingBuilder emailStartingBuilder) {
+	public EmailFromOutlookMessage outlookMsgToEmailBuilder(@Nonnull File msgFile, @Nonnull EmailStartingBuilder emailStartingBuilder)
+			throws OutlookMessageException {
 		return buildEmailFromOutlookMessage(
 				emailStartingBuilder.ignoringDefaults().startingBlank(),
 				parseOutlookMsg(checkNonEmptyArgument(msgFile, "msgFile")));
 	}
 
+	/**
+	 * @throws OutlookMessageException wrapping exceptions from {@link org.simplejavamail.outlookmessageparser.OutlookMessageParser#parseMsg(String)}.
+	 */
 	@Override
-	public EmailFromOutlookMessage outlookMsgToEmailBuilder(@Nonnull String msgFile, @Nonnull EmailStartingBuilder emailStartingBuilder) {
+	public EmailFromOutlookMessage outlookMsgToEmailBuilder(@Nonnull String msgFile, @Nonnull EmailStartingBuilder emailStartingBuilder)
+			throws OutlookMessageException {
 		return buildEmailFromOutlookMessage(
 				emailStartingBuilder.ignoringDefaults().startingBlank(),
 				parseOutlookMsg(checkNonEmptyArgument(msgFile, "msgFile")));
 	}
-	
+
+	/**
+	 * @throws OutlookMessageException wrapping exceptions from {@link org.simplejavamail.outlookmessageparser.OutlookMessageParser#parseMsg(InputStream)}.
+	 */
 	@Override
-	public EmailFromOutlookMessage outlookMsgToEmailBuilder(@Nonnull InputStream msgInputStream, @Nonnull EmailStartingBuilder emailStartingBuilder) {
+	public EmailFromOutlookMessage outlookMsgToEmailBuilder(@Nonnull InputStream msgInputStream, @Nonnull EmailStartingBuilder emailStartingBuilder)
+			throws OutlookMessageException {
 		return buildEmailFromOutlookMessage(
 				emailStartingBuilder.ignoringDefaults().startingBlank(),
 				parseOutlookMsg(checkNonEmptyArgument(msgInputStream, "msgInputStream")));
@@ -84,27 +96,39 @@ public class OutlookEmailConverter implements OutlookModule {
 			builder.bcc(bcc.getName(), bcc.getAddress());
 		}
 	}
-	
+
+	/**
+	 * @throws OutlookMessageException wrapping exceptions from {@link org.simplejavamail.outlookmessageparser.OutlookMessageParser#parseMsg(File)}.
+	 */
 	@Nonnull
-	private static OutlookMessage parseOutlookMsg(@Nonnull final File msgFile) {
+	private static OutlookMessage parseOutlookMsg(@Nonnull final File msgFile)
+			throws OutlookMessageException {
 		try {
 			return new org.simplejavamail.outlookmessageparser.OutlookMessageParser().parseMsg(msgFile);
 		} catch (final IOException e) {
 			throw new OutlookMessageException(OutlookMessageException.ERROR_PARSING_OUTLOOK_MSG, e);
 		}
 	}
-	
+
+	/**
+	 * @throws OutlookMessageException wrapping exceptions from {@link org.simplejavamail.outlookmessageparser.OutlookMessageParser#parseMsg(InputStream)}.
+	 */
 	@Nonnull
-	private static OutlookMessage parseOutlookMsg(@Nonnull final InputStream msgInputStream) {
+	private static OutlookMessage parseOutlookMsg(@Nonnull final InputStream msgInputStream)
+			throws OutlookMessageException {
 		try {
 			return new org.simplejavamail.outlookmessageparser.OutlookMessageParser().parseMsg(msgInputStream);
 		} catch (final IOException e) {
 			throw new OutlookMessageException(OutlookMessageException.ERROR_PARSING_OUTLOOK_MSG, e);
 		}
 	}
-	
+
+	/**
+	 * @throws OutlookMessageException wrapping exceptions from {@link org.simplejavamail.outlookmessageparser.OutlookMessageParser#parseMsg(String)}.
+	 */
 	@Nonnull
-	private static OutlookMessage parseOutlookMsg(@Nonnull final String msgFile) {
+	private static OutlookMessage parseOutlookMsg(@Nonnull final String msgFile)
+			throws OutlookMessageException {
 		try {
 			return new org.simplejavamail.outlookmessageparser.OutlookMessageParser().parseMsg(msgFile);
 		} catch (final IOException e) {

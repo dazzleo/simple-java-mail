@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
@@ -26,9 +28,16 @@ public class DKIMSigner implements DKIMModule {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DKIMSigner.class);
 
 	/**
+	 * @throws DKIMSigningException see:
+	 *                              <ol>
+	 *                                  <li>{@link DkimSigner#DkimSigner(String, String, File)}</li>
+	 *                                  <li>{@link DkimSigner#DkimSigner(String, String, InputStream)}</li>
+	 *                                  <li>{@link DkimMessage#DkimMessage(MimeMessage, DkimSigner)} </li>
+	 *                              </ol>
 	 * @see DKIMModule#signMessageWithDKIM(MimeMessage, Email)
 	 */
-	public MimeMessage signMessageWithDKIM(final MimeMessage messageToSign, final Email signingDetails) {
+	public MimeMessage signMessageWithDKIM(final MimeMessage messageToSign, final Email signingDetails)
+			throws DKIMSigningException {
 		LOGGER.debug("signing MimeMessage with DKIM...");
 		try {
 			final String dkimSelector = checkNonEmptyArgument(signingDetails.getDkimSelector(), "dkimSelector");
