@@ -1,5 +1,6 @@
 package org.simplejavamail.mailer.internal.util;
 
+import org.simplejavamail.MailException;
 import org.simplejavamail.api.internal.batchsupport.LifecycleDelegatingTransport;
 import org.simplejavamail.internal.modules.ModuleLoader;
 import org.slf4j.Logger;
